@@ -1,0 +1,25 @@
+name: seoul-bus-stop-alarm
+components:
+  - id: main
+    capabilities:
+      - id: refresh
+        version: 1
+      - id: yeosu0107.busMessage
+        version: 1
+    categories:
+      - name: Other
+preferences:
+  - name: apiKey
+    title: "공공데이터포털 API Key"
+    description: "발급받으신 서비스 키를 입력해주세요."
+    required: true
+    preferenceType: string
+    definition:
+      stringType: text
+  - name: stationId
+    title: "정류소 ID (ARS-ID)"
+    description: "조회할 서울 버스 정류소의 고유 번호를 입력해주세요."
+    required: true
+    preferenceType: string
+    definition:
+      stringType: text
