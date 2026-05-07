@@ -1,5 +1,5 @@
 local cosock = require "cosock"
-local https = cosock.asyncify "ssl.https"
+local http = cosock.asyncify "socket.http"
 local ltn12 = require "ltn12"
 local json = require "dkjson"
 local socket_url = require "socket.url"
@@ -70,13 +70,13 @@ local function fetch_seoul_bus_info(device)
         return
     end
 
-    local url = "https://ws.bus.go.kr/api/rest/stationinfo/getStationByUid"
+    local url = "http://ws.bus.go.kr/api/rest/stationinfo/getStationByUid"
         .. "?ServiceKey=" .. socket_url.escape(api_key)
         .. "&arsId=" .. socket_url.escape(ars_id)
         .. "&resultType=json"
 
     local response_body = {}
-    local res, code = https.request {
+    local res, code = http.request {
         url = url,
         method = "GET",
         sink = ltn12.sink.table(response_body),
