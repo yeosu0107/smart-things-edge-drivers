@@ -1,6 +1,8 @@
-# bus-tts-smartapp
+# bus-tts-api
 
-서울시 버스 도착 정보를 SmartThings 가상 디바이스 switch toggle로 트리거 → 갤럭시 홈 미니에서 TTS로 안내하는 cloud-to-cloud 자동화. SmartThings API_ONLY (OAuth-In) 패턴, Cloudflare Workers + KV.
+서울시 버스 도착 정보를 SmartThings 가상 디바이스 switch toggle로 트리거 → 갤럭시 홈 미니에서 TTS로 안내하는 cloud-to-cloud 자동화. SmartThings `API_ONLY` 앱(OAuth-In) 패턴, Cloudflare Workers + KV.
+
+> Cloudflare worker name은 운영 무중단을 위해 `bus-tts-smartapp` 유지. `wrangler.toml`의 `name`, `wrangler tail` 인자, 배포된 worker URL 모두 동일.
 
 ## 동작 흐름
 
@@ -19,7 +21,7 @@
 ## 디렉터리
 
 ```
-bus-tts-smartapp/
+bus-tts-api/
 ├─ wrangler.toml             Cloudflare Workers 설정 + KV binding
 ├─ public/index.html         OAuth 시작 페이지 (worker가 인라인 serve)
 ├─ profiles/bus-profile.yaml SmartThings device profile (switch + busmessage)

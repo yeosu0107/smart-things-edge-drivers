@@ -1,5 +1,5 @@
 {
-  "name": "bus-tts-smartapp",
+  "name": "bus-tts-api",
   "version": "3.0.0",
   "private": true,
   "type": "module",
