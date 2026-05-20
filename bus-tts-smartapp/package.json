@@ -1,0 +1,15 @@
+{
+  "name": "bus-tts-smartapp",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Seoul Bus TTS — API_ONLY (OAuth-In) Cloudflare Workers app.",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test 'test/*.test.js'",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  }
+}

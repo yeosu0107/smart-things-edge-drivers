@@ -78,7 +78,7 @@ smart-things-edge-drivers/
 |---|---|
 | `ST_CLIENT_ID` | SmartApp OAuth client (SmartThings 발급) |
 | `ST_CLIENT_SECRET` | 동상 |
-| `SEOUL_BUS_API_KEY` | 공공데이터포털 서비스 키 |
+| `OPEN_DATA_API_KEY` | 공공데이터포털 서비스 키 |
 
 ### SmartApp config (사용자가 모바일 앱에서 변경 가능)
 
@@ -155,7 +155,7 @@ const smartapp = new SmartApp()
     let message;
     try {
       const items = await fetchSeoulBus(
-        process.env.SEOUL_BUS_API_KEY,
+        process.env.OPEN_DATA_API_KEY,
         ctx.configStringValue('arsId')
       );
       message = buildMessage(items);
@@ -296,7 +296,7 @@ module.exports = { fetchSeoulBus, buildMessage, mapErrorToMessage };
 5. `smartthings deviceprofiles:create -i profiles/bus-profile.yaml`
 6. `smartthings virtualdevices:create` (위 profile 사용)
 7. `netlify deploy --prod`
-8. `netlify env:set SEOUL_BUS_API_KEY '<키>'`
+8. `netlify env:set OPEN_DATA_API_KEY '<키>'`
 9. `smartthings apps:create` (WEBHOOK_SMART_APP, target URL = Netlify endpoint, scopes: 최소 `r:devices:* x:devices:*` — push notification 관련 scope는 CLI 프롬프트가 제시하는 옵션 중 선택. 공식 scope 목록 미확정이므로 등록 직후 실제 푸시 호출로 검증) → `client_id`/`client_secret` 발급
 10. `netlify env:set ST_CLIENT_ID '<id>' && netlify env:set ST_CLIENT_SECRET '<secret>'`
 11. `netlify deploy --prod` (env 반영 재배포)

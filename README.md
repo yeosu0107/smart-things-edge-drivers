@@ -1,10 +1,9 @@
 # smart-things-edge-drivers
 
-[![SmartThings](https://img.shields.io/badge/SmartThings-Edge%20Driver-15bfff?logo=smartthings&logoColor=white)](https://developer.smartthings.com/docs/devices/hub-connected/get-started)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+SmartThings용 cloud-to-cloud SmartApp 모음.
 
-## Drivers
+## 포함 프로젝트
 
-| Driver | Package Key | 설명 |
-| --- | --- | --- |
-| [`seoul-bus-stop-alarm`](./seoul-bus-stop-alarm/) | `waterabout01957.seoul-bus-stop-alarm` | 서울시 공공데이터포털 버스 도착 정보 API를 호출해 안내 문장을 커스텀 capability로 emit. |
+- [`bus-tts-smartapp/`](bus-tts-smartapp/) — 서울시 버스 도착 정보를 SmartThings 가상 디바이스 switch toggle로 트리거하고 갤럭시 홈 미니에서 TTS로 출력. Cloudflare Workers + KV.
+
+각 프로젝트의 README에 setup/배포/CI/CD 절차가 있습니다.

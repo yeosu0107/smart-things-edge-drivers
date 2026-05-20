@@ -1,0 +1,24 @@
+name: bus-tts-v2
+components:
+  - id: main
+    capabilities:
+      - id: switch
+        version: 1
+      - id: waterabout01957.busmessage
+        version: 1
+    categories:
+      - name: Switch
+view:
+  dashboard:
+    states:
+      - capability: switch
+    actions:
+      - capability: switch
+  detailView:
+    - capability: switch
+    - capability: waterabout01957.busmessage
+  automation:
+    conditions:
+      - capability: switch
+    actions:
+      - capability: switch
