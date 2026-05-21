@@ -1,0 +1,211 @@
+# bus-tts-api
+
+서울시 버스 도착 정보를 SmartThings 가상 디바이스 switch toggle로 트리거 → 갤럭시 홈 미니에서 TTS로 안내하는 cloud-to-cloud 자동화. SmartThings `API_ONLY` 앱(OAuth-In) 패턴, Cloudflare Workers + KV.
+
+> Cloudflare worker name은 운영 무중단을 위해 `bus-tts-smartapp` 유지. `wrangler.toml`의 `name`, `wrangler tail` 인자, 배포된 worker URL 모두 동일.
+
+## 동작 흐름
+
+```
+[모바일 앱] switch ON
+   │
+   ▼ SmartThings 클라우드
+[Cloudflare Worker]  ── KV에서 refresh_token 로드 → access_token 갱신
+   │ 1. 서울시 공공데이터 API 호출 → 메시지 빌드
+   │ 2. 갤럭시 홈 미니: speechSynthesis.speak
+   │ 3. 가상 switch: off (자동 원복)
+   ▼
+[갤럭시 홈 미니] 음성 출력
+```
+
+## 디렉터리
+
+```
+bus-tts-api/
+├─ wrangler.toml             Cloudflare Workers 설정 + KV binding
+├─ public/index.html         OAuth 시작 페이지 (worker가 인라인 serve)
+├─ profiles/bus-profile.yaml SmartThings device profile (switch + busmessage)
+├─ src/
+│  ├─ worker.js              Cloudflare Workers entry
+│  ├─ smartapp.js            HTTP 라우터 + lifecycle 처리
+│  ├─ oauth.js               OAuth code exchange / refresh / getValidAccessToken
+│  ├─ storage.js             KV / memory storage abstraction
+│  ├─ subscription.js        device subscription register (switch.switch)
+│  ├─ smartthings.js         device command sender
+│  └─ bus.js                 서울 버스 API + 메시지 빌드
+└─ test/*.test.js            node --test 단위 테스트
+```
+
+## 로컬 테스트
+
+```bash
+npm install
+npm test
+```
+
+## 1회 셋업 (재구축할 때)
+
+### 1. SmartThings API_ONLY 앱 등록
+
+```yaml
+# api-only-app.yaml
+appName: bus-tts-api
+displayName: Seoul Bus TTS
+appType: API_ONLY
+classifications: [AUTOMATION]
+oauth:
+  clientName: Seoul Bus TTS
+  scope: [r:devices:*, x:devices:*]
+  redirectUris: [https://<your-worker-host>/oauth/callback]
+```
+
+```bash
+smartthings apps:create -i api-only-app.yaml
+# 응답에서 appId / oauthClientId / oauthClientSecret 보관
+
+# target URL 추가:
+smartthings apps:update <appId> -i - <<EOF
+appName: bus-tts-api
+appType: API_ONLY
+apiOnly:
+  targetUrl: https://<your-worker-host>/
+EOF
+```
+
+### 2. 가상 디바이스 + 프로파일
+
+```bash
+smartthings deviceprofiles:view:create -i profiles/bus-profile.yaml
+smartthings virtualdevices:create -N "버스 TTS" -P <profile-id> -l <location-id> -R <room-id>
+smartthings virtualdevices:events <device-id> switch:switch off
+```
+
+### 3. Cloudflare Workers + KV (local 작업용)
+
+```bash
+wrangler login
+wrangler kv namespace create ST_TOKENS              # 출력된 id 보관
+cp wrangler.toml.example wrangler.toml              # 그 다음 wrangler.toml의 <KV_NAMESPACE_ID> 치환
+```
+
+(`wrangler.toml`은 gitignore. CI는 `wrangler.toml.example`에서 동적으로 생성)
+
+### 4. 시크릿 등록 (local 작업용)
+
+```bash
+wrangler secret put ST_CLIENT_ID
+wrangler secret put ST_CLIENT_SECRET
+wrangler secret put OPEN_DATA_API_KEY      # 서울시 공공데이터포털 키
+wrangler secret put BUS_DEVICE_ID
+wrangler secret put SPEAKER_DEVICE_ID
+wrangler secret put BUS_ARS_ID
+wrangler secret put ST_REDIRECT_URI        # https://<your-worker-host>/oauth/callback
+```
+
+(CI를 통한 자동 배포 시엔 아래 "CI/CD" 섹션의 GitHub Secret만 등록하면 workflow가 알아서 sync)
+
+### 5. 배포 + CONFIRMATION 핸드셰이크
+
+```bash
+wrangler deploy
+smartthings apps:register <appId>
+smartthings apps <appId> | grep targetStatus    # CONFIRMED 확인
+```
+
+### 6. 사용자 1회 OAuth
+
+브라우저로 `https://<your-worker-host>/` 접속 → "SmartThings로 인증" → 권한 동의. worker가 OAuth code → token 교환 + 구독(switch.switch) 자동 등록 + token KV 저장.
+
+이후 모바일 앱에서 가상 디바이스 switch ON으로 트리거.
+
+## 운영 중 갱신 (1회 셋업 이후)
+
+코드만 바뀌면 CI(아래 "CI/CD")로 끝나지만, SmartThings 측 메타데이터가 변하는 경우엔 수동 명령이 필요하다.
+
+### 디바이스 프로파일 변경 (`profiles/bus-profile.yaml`)
+
+capability 추가/변경 등 프로파일 yaml을 수정했을 때:
+
+```bash
+smartthings deviceprofiles:update <profile-id> -i profiles/bus-profile.yaml
+# 가상 디바이스 자체를 새 capability로 다시 생성해야 할 수도 있음
+```
+
+가상 디바이스는 생성 시점의 프로파일을 따라가므로, capability 구조가 크게 바뀌면 `virtualdevices:delete` → `virtualdevices:create`로 재생성하고 `BUS_DEVICE_ID` secret도 새 id로 업데이트.
+
+### Worker 호스트 변경 (`targetUrl` / OAuth redirect URI)
+
+worker URL이 바뀐 경우 (예: `workers.dev` → 커스텀 도메인). SmartThings는 등록된 `targetUrl` / `redirectUris`로만 콜백/리다이렉트를 보내므로 둘 다 갱신해야 한다:
+
+```bash
+# 1) targetUrl 갱신 + 재-CONFIRMATION
+smartthings apps:update <appId> -i - <<EOF
+appName: bus-tts-api
+appType: API_ONLY
+apiOnly:
+  targetUrl: https://<new-host>/
+EOF
+smartthings apps:register <appId>
+smartthings apps <appId> | grep targetStatus    # CONFIRMED 확인
+
+# 2) OAuth redirect URI 갱신
+smartthings apps:oauth:update <appId> -i - <<EOF
+clientName: Seoul Bus TTS
+scope: [r:devices:*, x:devices:*]
+redirectUris: [https://<new-host>/oauth/callback]
+EOF
+
+# 3) Cloudflare 측 ST_REDIRECT_URI secret도 새 URL로 (CI 변수도)
+wrangler secret put ST_REDIRECT_URI
+```
+
+GitHub Secret `ST_REDIRECT_URI`도 함께 갱신해야 다음 CI 실행에서 worker가 새 redirect URI를 쓴다. 이전 OAuth 토큰은 KV에 그대로 유효하므로 사용자 재인증은 보통 불필요.
+
+### OAuth scope 변경
+
+`r:devices:*` 외 다른 scope를 추가/제거한 경우:
+
+```bash
+smartthings apps:oauth:update <appId> -i - <<EOF
+clientName: Seoul Bus TTS
+scope: [r:devices:*, x:devices:*, r:locations:*]   # 변경된 scope
+redirectUris: [https://<your-worker-host>/oauth/callback]
+EOF
+```
+
+기존 사용자 토큰은 옛 scope로 발급된 상태라 신규 scope를 쓰려면 브라우저로 `/authorize`를 다시 거쳐 재동의해야 한다.
+
+## CI/CD (GitHub Actions)
+
+수동 트리거만 가능 (`workflow_dispatch`). GitHub UI → Actions → "Deploy bus-tts-api" → **Run workflow** 또는 CLI:
+
+```bash
+gh workflow run deploy-bus-tts.yml
+```
+
+`.github/workflows/deploy-bus-tts.yml` 참고. **모든 값을 GitHub Secret에서 source-of-truth로 관리**하고, workflow가:
+
+1. `wrangler.toml.example`을 GitHub Secret의 KV namespace id로 치환해서 `wrangler.toml` 생성
+2. `wrangler secret bulk`로 worker secret 7개 모두 Cloudflare에 동기화
+3. `wrangler deploy`
+
+GitHub repo Settings → Secrets and variables → Actions에 다음 9개 secret 등록:
+
+| GitHub Secret | 발급 위치 / 의미 |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | https://dash.cloudflare.com/profile/api-tokens → Create Token → 템플릿 "Edit Cloudflare Workers" |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare dashboard 우측 사이드바 → Account ID 복사 |
+| `KV_NAMESPACE_ID` | `wrangler kv namespace create ST_TOKENS`로 발급받은 id |
+| `ST_CLIENT_ID`, `ST_CLIENT_SECRET` | `smartthings apps:create` 응답의 OAuth 자격증명 |
+| `OPEN_DATA_API_KEY` | 서울시 공공데이터포털 발급 키 |
+| `BUS_DEVICE_ID`, `SPEAKER_DEVICE_ID` | SmartThings device id (가상 device, 갤럭시 홈 미니) |
+| `BUS_ARS_ID` | 정류소 ARS-ID |
+| `ST_REDIRECT_URI` | `https://<your-worker-host>/oauth/callback` |
+
+## 디버그
+
+```bash
+wrangler tail bus-tts-smartapp --format pretty
+wrangler kv key get default --namespace-id <id> --remote
+smartthings devices:status <device-id>
+```

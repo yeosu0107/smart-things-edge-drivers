@@ -1,9 +1,0 @@
-{
-  "name": "seoul-bus-oauth-broker",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Stateless OAuth proxy for the seoul-bus-stop-alarm SmartThings Edge driver.",
-  "engines": {
-    "node": ">=18"
-  }
-}

@@ -1,0 +1,11 @@
+# wrangler.toml template. Real wrangler.toml is gitignored.
+# Local dev: cp wrangler.toml.example wrangler.toml, replace <KV_NAMESPACE_ID> with the id printed by
+# `wrangler kv namespace create ST_TOKENS`. CI generates wrangler.toml dynamically from secrets.
+name = "bus-tts-smartapp"
+main = "src/worker.js"
+compatibility_date = "2025-05-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[kv_namespaces]]
+binding = "ST_TOKENS"
+id = "<KV_NAMESPACE_ID>"

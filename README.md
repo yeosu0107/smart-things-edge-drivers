@@ -1,10 +1,12 @@
-# smart-things-edge-drivers
+# smartthings-apps
 
-[![SmartThings](https://img.shields.io/badge/SmartThings-Edge%20Driver-15bfff?logo=smartthings&logoColor=white)](https://developer.smartthings.com/docs/devices/hub-connected/get-started)
+[![SmartThings](https://img.shields.io/badge/SmartThings-Cloud%20App-15bfff?logo=smartthings&logoColor=white)](https://developer.smartthings.com/docs/getting-started/welcome)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-## Drivers
+SmartThings cloud-to-cloud 앱 모음. SmartThings 공식 `/apps` 카테고리(`WEBHOOK_SMART_APP` / `LAMBDA_SMART_APP` / `API_ONLY`)에 해당하는 프로젝트들을 담는다.
 
-| Driver | Package Key | 설명 |
-| --- | --- | --- |
-| [`seoul-bus-stop-alarm`](./seoul-bus-stop-alarm/) | `waterabout01957.seoul-bus-stop-alarm` | 서울시 공공데이터포털 버스 도착 정보 API를 호출해 안내 문장을 커스텀 capability로 emit. |
+## 포함 프로젝트
+
+- [`bus-tts-api/`](bus-tts-api/) — 서울시 버스 도착 정보를 SmartThings 가상 디바이스 switch toggle로 트리거하고 갤럭시 홈 미니에서 TTS로 출력. `API_ONLY` 앱(OAuth-In) + Cloudflare Workers + KV.
+
+각 프로젝트의 README에 setup/배포/CI/CD 절차가 있습니다.

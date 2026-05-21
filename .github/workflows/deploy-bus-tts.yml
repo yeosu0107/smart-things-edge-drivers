@@ -1,0 +1,49 @@
+name: Deploy bus-tts-api
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bus-tts-api
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: bus-tts-api/package-lock.json
+
+      - run: npm ci
+
+      - run: npm test
+
+      - name: Generate wrangler.toml from template
+        run: |
+          sed "s|<KV_NAMESPACE_ID>|${{ secrets.KV_NAMESPACE_ID }}|" wrangler.toml.example > wrangler.toml
+
+      - name: Sync worker secrets to Cloudflare
+        run: |
+          cat > /tmp/secrets.json <<EOF
+          {
+            "ST_CLIENT_ID": ${{ toJSON(secrets.ST_CLIENT_ID) }},
+            "ST_CLIENT_SECRET": ${{ toJSON(secrets.ST_CLIENT_SECRET) }},
+            "OPEN_DATA_API_KEY": ${{ toJSON(secrets.OPEN_DATA_API_KEY) }},
+            "BUS_DEVICE_ID": ${{ toJSON(secrets.BUS_DEVICE_ID) }},
+            "SPEAKER_DEVICE_ID": ${{ toJSON(secrets.SPEAKER_DEVICE_ID) }},
+            "BUS_ARS_ID": ${{ toJSON(secrets.BUS_ARS_ID) }},
+            "ST_REDIRECT_URI": ${{ toJSON(secrets.ST_REDIRECT_URI) }}
+          }
+          EOF
+          npx wrangler secret bulk /tmp/secrets.json
+          rm /tmp/secrets.json
+
+      - name: Deploy
+        run: npx wrangler deploy
