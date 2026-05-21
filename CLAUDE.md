@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 현재 포함된 프로젝트:
 
 - `bus-tts-api/` — 서울시 공공데이터포털 버스 도착 정보 API를 호출해, SmartThings 가상 디바이스 switch toggle을 트리거로 갤럭시 홈 미니에서 TTS 안내를 출력. SmartThings `API_ONLY` 앱(OAuth-In) + Cloudflare Workers + KV 기반. 상세는 [`bus-tts-api/README.md`](bus-tts-api/README.md).
+- `weather-tts-api/` — 기상청 단기예보 + 에어코리아 미세먼지 API를 호출해, 가상 switch 토글 트리거로 갤럭시 홈 미니에서 기상캐스터 톤 TTS 안내를 출력. 동일한 `API_ONLY` + Cloudflare Workers + KV 패턴. 상세는 [`weather-tts-api/README.md`](weather-tts-api/README.md).
 
 > 참고: 과거에는 SmartThings Edge Driver(`seoul-bus-stop-alarm/`)도 포함되어 있었으나, hub의 외부 인터넷 직접 호출이 platform 차원에서 차단되어 cloud-to-cloud 구조로 옮겼다. 관련 의사결정은 `docs/` 참고.
 

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Weather TTS — 설정</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        max-width: 520px; margin: 4rem auto; padding: 0 1.5rem; line-height: 1.6;
+      }
+      h1 { font-size: 1.5rem; }
+      .btn {
+        display: inline-block; padding: 0.6rem 1.2rem; background: #1976d2; color: #fff;
+        text-decoration: none; border-radius: 0.4rem; font-weight: 600;
+      }
+      ol li { margin-bottom: 0.4rem; }
+      code { background: rgba(127,127,127,0.15); padding: 0.1rem 0.35rem; border-radius: 0.25rem; }
+    </style>
+  </head>
+  <body>
+    <h1>Weather TTS — 1회 설정</h1>
+    <p>가상 switch push 이벤트 구독을 위해 SmartThings 계정 권한을 1회 위임해야 합니다.</p>
+    <ol>
+      <li>아래 버튼을 누르면 SmartThings 로그인 페이지로 이동합니다.</li>
+      <li>로그인 + 권한 동의 후 자동으로 돌아옵니다.</li>
+      <li>토큰이 저장되고 가상 디바이스의 switch subscription이 등록됩니다.</li>
+    </ol>
+    <p><a class="btn" href="/authorize">SmartThings로 인증</a></p>
+    <p style="margin-top:2rem;color:#666;font-size:0.9rem">
+      이후 가상 디바이스 <code>날씨 TTS</code>의 switch를 켜면 동작합니다.
+    </p>
+  </body>
+</html>

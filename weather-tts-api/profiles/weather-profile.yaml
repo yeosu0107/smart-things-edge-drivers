@@ -1,0 +1,21 @@
+name: weather-tts-v1
+components:
+  - id: main
+    capabilities:
+      - id: switch
+        version: 1
+    categories:
+      - name: Switch
+view:
+  dashboard:
+    states:
+      - capability: switch
+    actions:
+      - capability: switch
+  detailView:
+    - capability: switch
+  automation:
+    conditions:
+      - capability: switch
+    actions:
+      - capability: switch
